@@ -1,0 +1,6 @@
+{
+  "name": "Student Management & Attendance Analytics System",
+  "description": "A comprehensive, responsive Student Management and Attendance System with role-based access for Admin, Teacher, and Student, dynamic SQL-driven Chart.js analytics, attendance reporting, and support ticketing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
