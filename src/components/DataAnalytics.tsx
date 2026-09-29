@@ -4,7 +4,7 @@ import {
   registerables 
 } from 'chart.js';
 import { 
-  BarChart3, PieChart, TrendingUp, AlertTriangle, 
+  BarChart3, TrendingUp, AlertTriangle, 
   Filter, RotateCcw, Calendar, CheckCircle2, XCircle, Users 
 } from 'lucide-react';
 import { DBService } from '../services/storage';
@@ -52,14 +52,14 @@ export const DataAnalytics: React.FC<DataAnalyticsProps> = ({
   });
 
   // Canvas Refs
-  const pieChartRef = useRef<HTMLCanvasElement | null>(null);
+  const pulseChartRef = useRef<HTMLCanvasElement | null>(null);
   const subjectBarChartRef = useRef<HTMLCanvasElement | null>(null);
   const monthlyLineChartRef = useRef<HTMLCanvasElement | null>(null);
   const dailyBarChartRef = useRef<HTMLCanvasElement | null>(null);
   const lowAttendanceBarChartRef = useRef<HTMLCanvasElement | null>(null);
 
   // Chart Instances
-  const pieInstance = useRef<Chart | null>(null);
+  const pulseInstance = useRef<Chart | null>(null);
   const subjectBarInstance = useRef<Chart | null>(null);
   const monthlyLineInstance = useRef<Chart | null>(null);
   const dailyBarInstance = useRef<Chart | null>(null);
@@ -118,40 +118,60 @@ export const DataAnalytics: React.FC<DataAnalyticsProps> = ({
 
   // Render / Update Chart.js instances
   useEffect(() => {
-    // 1. Pie Chart: Present vs Absent
-    if (pieChartRef.current) {
-      if (pieInstance.current) pieInstance.current.destroy();
+    // 1. Pulse Trend: Attendance momentum over time
+    if (pulseChartRef.current) {
+      if (pulseInstance.current) pulseInstance.current.destroy();
 
-      const totalPresent = analyticsSummary.total_present_records;
-      const totalAbsent = analyticsSummary.total_absent_records;
+      const trendLabels = monthlyData.labels;
+      const trendValues = monthlyData.percentages;
 
-      pieInstance.current = new Chart(pieChartRef.current, {
-        type: 'doughnut',
+      pulseInstance.current = new Chart(pulseChartRef.current, {
+        type: 'line',
         data: {
-          labels: ['Present', 'Absent'],
+          labels: trendLabels,
           datasets: [
             {
-              data: [totalPresent || 1, totalAbsent || 0],
-              backgroundColor: ['#10b981', '#f43f5e'],
-              borderColor: ['#059669', '#e11d48'],
-              borderWidth: 1.5,
-              hoverOffset: 4,
+              label: 'Attendance Pulse',
+              data: trendValues,
+              borderColor: '#4f46e5',
+              backgroundColor: 'rgba(79, 70, 229, 0.12)',
+              fill: true,
+              borderWidth: 3,
+              pointRadius: 4,
+              pointBackgroundColor: '#312e81',
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              tension: 0.38,
             },
           ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              min: 40,
+              max: 100,
+              ticks: { callback: value => `${value}%` },
+              grid: { color: '#eef2ff' },
+            },
+            x: {
+              grid: { display: false },
+            },
+          },
           plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                font: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' },
-                padding: 16,
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (context) => `Attendance: ${context.parsed.y}%`,
               },
             },
           },
-          cutout: '60%',
         },
       });
     }
@@ -317,7 +337,7 @@ export const DataAnalytics: React.FC<DataAnalyticsProps> = ({
     }
 
     return () => {
-      if (pieInstance.current) pieInstance.current.destroy();
+      if (pulseInstance.current) pulseInstance.current.destroy();
       if (subjectBarInstance.current) subjectBarInstance.current.destroy();
       if (monthlyLineInstance.current) monthlyLineInstance.current.destroy();
       if (dailyBarInstance.current) dailyBarInstance.current.destroy();
@@ -500,30 +520,29 @@ export const DataAnalytics: React.FC<DataAnalyticsProps> = ({
         </div>
       </form>
 
-      {/* Row 1: Pie Chart & Subject Bar Chart */}
+      {/* Row 1: Pulse Trend & Subject Bar Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Pie Chart: Present vs Absent (Requirement 22) */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-              <PieChart className="w-4 h-4 text-emerald-600" />
-              <span>Present vs Absent Ratio</span>
+              <TrendingUp className="w-4 h-4 text-indigo-600" />
+              <span>Academic Pulse</span>
             </h3>
-            <span className="text-[11px] text-slate-400">Total Entries</span>
+            <span className="text-[11px] text-slate-400">Momentum</span>
           </div>
 
           <div className="h-64 relative flex items-center justify-center">
-            <canvas ref={pieChartRef} />
+            <canvas ref={pulseChartRef} />
           </div>
 
           <div className="flex items-center justify-around pt-2 border-t border-slate-100 text-xs text-slate-600 font-medium">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
-              <span>Present: <strong>{analyticsSummary.total_present_records}</strong></span>
+              <span className="w-3 h-3 rounded-full bg-indigo-500"></span>
+              <span>Current Avg: <strong>{analyticsSummary.avg_attendance}%</strong></span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-rose-500"></span>
-              <span>Absent: <strong>{analyticsSummary.total_absent_records}</strong></span>
+              <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
+              <span>Present: <strong>{analyticsSummary.total_present_records}</strong></span>
             </div>
           </div>
         </div>

@@ -170,22 +170,23 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Right action bar */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Dedicated Queries & Grievances Button */}
-          <button
-            id="open-queries-hub-btn"
-            onClick={() => navigate('/queries')}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-xl text-xs font-bold shadow-2xs transition-all cursor-pointer font-display"
-            title="Student & Teacher Problem Sharing, Notification & Resolution"
-          >
-            <MessageSquare className="w-3.5 h-3.5 text-indigo-600" />
-            <span className="hidden sm:inline">Queries & Help</span>
-            <span className="sm:hidden">Queries</span>
-            {unreadQueriesCount > 0 && (
-              <span className="w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center animate-pulse">
-                {unreadQueriesCount}
-              </span>
-            )}
-          </button>
+          {session && session.role === 'admin' && (
+            <button
+              id="open-queries-hub-btn"
+              onClick={() => navigate('/queries')}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-xl text-xs font-bold shadow-2xs transition-all cursor-pointer font-display"
+              title="Student & Teacher Problem Sharing, Notification & Resolution"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-indigo-600" />
+              <span className="hidden sm:inline">Queries & Help</span>
+              <span className="sm:hidden">Queries</span>
+              {unreadQueriesCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center animate-pulse">
+                  {unreadQueriesCount}
+                </span>
+              )}
+            </button>
+          )}
 
           {!session ? (
             <div className="flex items-center gap-2">

@@ -72,11 +72,7 @@ export default function App() {
   const renderCurrentView = () => {
     switch (currentPath) {
       case '/':
-        return <LandingPage navigate={navigate} onQuickLogin={role => {
-          if (role === 'admin') navigate('/admin/dashboard');
-          else if (role === 'teacher') navigate('/teacher/dashboard');
-          else navigate('/student/dashboard');
-        }} />;
+        return <LandingPage navigate={navigate} />;
 
       case '/login':
         return <LoginPage navigate={navigate} onLoginSuccess={handleLoginSuccess} />;

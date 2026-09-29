@@ -6,10 +6,9 @@ import {
 
 interface LandingPageProps {
   navigate: (path: string) => void;
-  onQuickLogin: (role: 'admin' | 'teacher' | 'student') => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ navigate, onQuickLogin }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
   return (
     <div className="space-y-16 pb-16">
       {/* Hero Section */}
@@ -55,36 +54,30 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate, onQuickLogin
             </div>
           </div>
 
-          {/* Viva / Quick Demo Account Evaluator Box */}
+          {/* Demo credentials info box - no auto redirect */}
           <div className="mt-8 max-w-xl mx-auto p-4 rounded-xl bg-white border border-slate-200 shadow-sm text-left">
             <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 flex items-center justify-between">
-              <span>⚡ Viva / Evaluator Quick Demo Accounts (1-Click Switch)</span>
-              <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Active</span>
+              <span>ℹ️ Viva / Evaluator Demo Credentials</span>
+              <span className="text-[10px] text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">No redirect</span>
             </div>
             <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => onQuickLogin('admin')}
-                className="p-2.5 rounded-lg border border-rose-200 bg-rose-50/60 hover:bg-rose-100 text-left transition-colors cursor-pointer group"
-              >
-                <div className="text-xs font-bold text-rose-800 group-hover:text-rose-900">Admin</div>
-                <div className="text-[10px] text-rose-600 font-mono">admin / admin123</div>
-              </button>
+              <div className="p-2.5 rounded-lg border border-rose-200 bg-rose-50/60 text-left">
+                <div className="text-xs font-bold text-rose-800">Admin</div>
+                <div className="text-[10px] text-rose-600 font-mono mt-1">User: admin</div>
+                <div className="text-[10px] text-rose-600 font-mono">Pass: admin123</div>
+              </div>
 
-              <button
-                onClick={() => onQuickLogin('teacher')}
-                className="p-2.5 rounded-lg border border-amber-200 bg-amber-50/60 hover:bg-amber-100 text-left transition-colors cursor-pointer group"
-              >
-                <div className="text-xs font-bold text-amber-800 group-hover:text-amber-900">Teacher</div>
-                <div className="text-[10px] text-amber-600 font-mono">prof_sharma</div>
-              </button>
+              <div className="p-2.5 rounded-lg border border-amber-200 bg-amber-50/60 text-left">
+                <div className="text-xs font-bold text-amber-800">Teacher</div>
+                <div className="text-[10px] text-amber-600 font-mono mt-1">User: prof_sharma</div>
+                <div className="text-[10px] text-amber-600 font-mono">Pass: teacher123</div>
+              </div>
 
-              <button
-                onClick={() => onQuickLogin('student')}
-                className="p-2.5 rounded-lg border border-emerald-200 bg-emerald-50/60 hover:bg-emerald-100 text-left transition-colors cursor-pointer group"
-              >
-                <div className="text-xs font-bold text-emerald-800 group-hover:text-emerald-900">Student</div>
-                <div className="text-[10px] text-emerald-600 font-mono">rahul101</div>
-              </button>
+              <div className="p-2.5 rounded-lg border border-emerald-200 bg-emerald-50/60 text-left">
+                <div className="text-xs font-bold text-emerald-800">Student</div>
+                <div className="text-[10px] text-emerald-600 font-mono mt-1">User: rahul101</div>
+                <div className="text-[10px] text-emerald-600 font-mono">Pass: student123</div>
+              </div>
             </div>
           </div>
         </div>

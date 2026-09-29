@@ -3,7 +3,7 @@ import { Chart, registerables } from 'chart.js';
 import { 
   UserCheck, BookOpen, CalendarCheck, FileText, 
   BarChart3, CheckCircle2, XCircle, ArrowRight, Clock, Users,
-  PieChart as PieIcon, ChevronRight, Sparkles, MessageSquare
+  TrendingUp, ChevronRight, Sparkles, MessageSquare
 } from 'lucide-react';
 import { SessionUser, Subject, Course, Student } from '../types';
 import { DBService } from '../services/storage';
@@ -25,9 +25,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   students,
   onNavigateTab,
 }) => {
-  const teacherPieRef = useRef<HTMLCanvasElement | null>(null);
+  const performanceTrendRef = useRef<HTMLCanvasElement | null>(null);
   const chartInstance = useRef<Chart | null>(null);
-  const [chartMode, setChartMode] = useState<'overall' | 'today' | 'subjects'>('overall');
 
   // Find teacher's assigned subjects
   const teacherSubjects = useMemo(() => {
@@ -54,142 +53,69 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
   // Chart setup
   useEffect(() => {
-    if (!teacherPieRef.current) return;
+    if (!performanceTrendRef.current) return;
 
     if (chartInstance.current) {
       chartInstance.current.destroy();
     }
 
-    if (chartMode === 'overall') {
-      chartInstance.current = new Chart(teacherPieRef.current, {
-        type: 'doughnut',
-        data: {
-          labels: ['Present Students', 'Absent Students'],
-          datasets: [
-            {
-              data: [overallPresent || 1, overallAbsent || 0],
-              backgroundColor: ['#10b981', '#f43f5e'],
-              borderColor: ['#059669', '#e11d48'],
-              borderWidth: 2,
-              hoverOffset: 6,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                font: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' },
-                padding: 14,
-              },
-            },
-            tooltip: {
-              callbacks: {
-                label: (context) => {
-                  const val = Number(context.raw) || 0;
-                  const pct = overallTotal > 0 ? ((val / overallTotal) * 100).toFixed(1) : 0;
-                  return ` ${context.label}: ${val} (${pct}%)`;
-                },
-              },
-            },
-          },
-          cutout: '62%',
-        },
-      });
-    } else if (chartMode === 'today') {
-      const todayTotal = todayPresent + todayAbsent;
-      chartInstance.current = new Chart(teacherPieRef.current, {
-        type: 'doughnut',
-        data: {
-          labels: ['Today Present', 'Today Absent'],
-          datasets: [
-            {
-              data: [todayPresent || 1, todayAbsent || 0],
-              backgroundColor: ['#06b6d4', '#fb7185'],
-              borderColor: ['#0891b2', '#e11d48'],
-              borderWidth: 2,
-              hoverOffset: 6,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                font: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' },
-                padding: 14,
-              },
-            },
-            tooltip: {
-              callbacks: {
-                label: (context) => {
-                  const val = Number(context.raw) || 0;
-                  const pct = todayTotal > 0 ? ((val / todayTotal) * 100).toFixed(1) : 0;
-                  return ` ${context.label}: ${val} (${pct}%)`;
-                },
-              },
-            },
-          },
-          cutout: '62%',
-        },
-      });
-    } else {
-      // Subject distribution
-      const labels = teacherSubjects.map(s => s.subject_code);
-      const data = teacherSubjects.map(s => {
-        return teacherAllAttendance.filter(a => a.subject_id === s.subject_id && a.status === 'Present').length;
-      });
-      const colors = ['#6366f1', '#10b981', '#f59e0b', '#06b6d4', '#ec4899', '#8b5cf6'];
+    const labels = teacherSubjects.length > 0 ? teacherSubjects.map(s => s.subject_code) : ['No subjects'];
+    const values = teacherSubjects.length > 0 ? teacherSubjects.map(s => {
+      const subjectRecords = teacherAllAttendance.filter(a => a.subject_id === s.subject_id);
+      const present = subjectRecords.filter(a => a.status === 'Present').length;
+      const total = subjectRecords.length || 1;
+      return Number(((present / total) * 100).toFixed(1));
+    }) : [0];
 
-      chartInstance.current = new Chart(teacherPieRef.current, {
-        type: 'pie',
-        data: {
-          labels: labels.length > 0 ? labels : ['No Subjects'],
-          datasets: [
-            {
-              data: data.length > 0 ? data : [1],
-              backgroundColor: colors.slice(0, Math.max(labels.length, 1)),
-              borderWidth: 2,
-              hoverOffset: 6,
-            },
-          ],
+    chartInstance.current = new Chart(performanceTrendRef.current, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Attendance Trend',
+            data: values,
+            borderColor: '#4f46e5',
+            backgroundColor: 'rgba(79, 70, 229, 0.12)',
+            fill: true,
+            borderWidth: 3,
+            pointRadius: 4,
+            pointBackgroundColor: '#312e81',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            tension: 0.38,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            min: 0,
+            max: 100,
+            ticks: { callback: value => `${value}%` },
+            grid: { color: '#eef2ff' },
+          },
+          x: { grid: { display: false } },
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                font: { family: 'Plus Jakarta Sans', size: 11, weight: 'bold' },
-                padding: 12,
-              },
-            },
-            tooltip: {
-              callbacks: {
-                label: (context) => {
-                  const val = Number(context.raw) || 0;
-                  return ` ${context.label}: ${val} Present Attendances`;
-                },
-              },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => `Attendance: ${context.parsed.y}%`,
             },
           },
         },
-      });
-    }
+      },
+    });
 
     return () => {
       if (chartInstance.current) {
         chartInstance.current.destroy();
       }
     };
-  }, [chartMode, overallPresent, overallAbsent, overallTotal, todayPresent, todayAbsent, teacherSubjects, teacherAllAttendance]);
+  }, [overallPresent, overallAbsent, overallTotal, todayPresent, todayAbsent, teacherSubjects, teacherAllAttendance]);
 
   return (
     <div className="space-y-8">
@@ -255,63 +181,27 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         </div>
       </div>
 
-      {/* NEW: Faculty Attendance Analytics Pie Chart Card */}
       <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-2xs space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-bold mb-1">
-              <PieIcon className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Teacher Academic Analytics</span>
+              <TrendingUp className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Faculty Performance Pulse</span>
             </div>
             <h3 className="text-base font-bold text-slate-900">
-              Class Attendance Breakdown (Pie Chart)
+              Subject Attendance Momentum
             </h3>
             <p className="text-xs text-slate-500">
-              Visual proportion of present vs absent student turnouts in your assigned courses
+              More modern trend analysis, with cleaner linear graphs instead of pie slices.
             </p>
-          </div>
-
-          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
-            <button
-              onClick={() => setChartMode('overall')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                chartMode === 'overall'
-                  ? 'bg-white text-indigo-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Overall Lectures
-            </button>
-            <button
-              onClick={() => setChartMode('today')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                chartMode === 'today'
-                  ? 'bg-white text-indigo-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Today's Classes
-            </button>
-            <button
-              onClick={() => setChartMode('subjects')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                chartMode === 'subjects'
-                  ? 'bg-white text-indigo-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Subject Ratio
-            </button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-          {/* Chart Canvas */}
           <div className="lg:col-span-7 h-64 sm:h-72 relative flex items-center justify-center">
-            <canvas ref={teacherPieRef} />
+            <canvas ref={performanceTrendRef} />
           </div>
 
-          {/* Side Summary */}
           <div className="lg:col-span-5 space-y-3 bg-slate-50/80 p-5 rounded-2xl border border-slate-200/80 text-xs">
             <h4 className="font-bold text-slate-900 text-sm flex items-center justify-between">
               <span>Faculty Turnout Summary</span>

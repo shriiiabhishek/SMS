@@ -258,51 +258,34 @@ export const LoginPage: React.FC<LoginPageProps> = ({ navigate, onLoginSuccess }
           </button>
         </form>
 
-        {/* Quick fill & instant login helper */}
+        {/* Demo credentials info only - no redirect */}
         <div className="mt-6 pt-4 border-t border-slate-100">
           <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2.5 flex items-center justify-between font-display">
             <span className="flex items-center gap-1.5 text-slate-700">
               <Key className="w-3.5 h-3.5 text-amber-500" />
-              <span>One-Click Instant Role Login</span>
+              <span>Demo Credentials</span>
             </span>
-            <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">Auto-Redirect ➡️</span>
+            <span className="text-[10px] text-slate-600 font-bold bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">Info only</span>
           </div>
+
           <div className="grid grid-cols-3 gap-2 text-xs">
-            <button
-              type="button"
-              id="instant-login-admin"
-              onClick={() => instantLogin('admin', 'admin123', 'admin')}
-              className="p-2.5 rounded-xl border border-rose-200/80 bg-rose-50/70 text-rose-800 hover:bg-rose-100 font-bold flex flex-col items-center gap-1 transition-all cursor-pointer text-center font-display"
-              title="Sign in as Administrator & open Admin Dashboard"
-            >
+            <div className="p-2.5 rounded-xl border border-rose-200/80 bg-rose-50/70 text-rose-800 font-bold flex flex-col items-center gap-1 text-center font-display">
               <ShieldCheck className="w-4 h-4 text-rose-600" />
               <span className="font-extrabold text-[12px]">Admin</span>
-              <span className="text-[9px] font-semibold text-rose-600 font-form-text">Overview</span>
-            </button>
+              <span className="text-[9px] font-semibold text-rose-600 font-form-text">admin / admin123</span>
+            </div>
 
-            <button
-              type="button"
-              id="instant-login-teacher"
-              onClick={() => instantLogin('prof_sharma', 'teacher123', 'teacher')}
-              className="p-2.5 rounded-xl border border-amber-200/80 bg-amber-50/70 text-amber-800 hover:bg-amber-100 font-bold flex flex-col items-center gap-1 transition-all cursor-pointer text-center font-display"
-              title="Sign in as Teacher & open Teacher Dashboard with Pie Chart"
-            >
+            <div className="p-2.5 rounded-xl border border-amber-200/80 bg-amber-50/70 text-amber-800 font-bold flex flex-col items-center gap-1 text-center font-display">
               <UserIcon className="w-4 h-4 text-amber-600" />
               <span className="font-extrabold text-[12px]">Teacher</span>
-              <span className="text-[9px] font-semibold text-amber-600 font-form-text">Pie Chart</span>
-            </button>
+              <span className="text-[9px] font-semibold text-amber-600 font-form-text">prof_sharma / teacher123</span>
+            </div>
 
-            <button
-              type="button"
-              id="instant-login-student"
-              onClick={() => instantLogin('rahul101', 'student123', 'student')}
-              className="p-2.5 rounded-xl border border-emerald-200/80 bg-emerald-50/70 text-emerald-800 hover:bg-emerald-100 font-bold flex flex-col items-center gap-1 transition-all cursor-pointer text-center font-display"
-              title="Sign in as Student & open Student Dashboard with Pie Chart"
-            >
+            <div className="p-2.5 rounded-xl border border-emerald-200/80 bg-emerald-50/70 text-emerald-800 font-bold flex flex-col items-center gap-1 text-center font-display">
               <GraduationCap className="w-4 h-4 text-emerald-600" />
               <span className="font-extrabold text-[12px]">Student</span>
-              <span className="text-[9px] font-semibold text-emerald-600 font-form-text">Pie Chart</span>
-            </button>
+              <span className="text-[9px] font-semibold text-emerald-600 font-form-text">rahul101 / student123</span>
+            </div>
           </div>
         </div>
 

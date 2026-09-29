@@ -2,8 +2,10 @@ import React from 'react';
 import { 
   Users, UserCheck, BookOpen, Layers, CheckCircle2, 
   XCircle, TrendingUp, AlertTriangle, CalendarCheck, 
-  FileText, BarChart3, HelpCircle, ArrowUpRight, Plus, ExternalLink
+  FileText, BarChart3, HelpCircle, ArrowUpRight, Plus, ExternalLink,
+  MessageSquareText, BellRing
 } from 'lucide-react';
+import { DBService } from '../services/storage';
 import { AnalyticsSummary, SessionUser } from '../types';
 
 interface AdminDashboardProps {
@@ -17,6 +19,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   session,
   onNavigateTab,
 }) => {
+  const recentQueries = React.useMemo(() => DBService.getAcademicQueries().slice(0, 3), []);
+
   return (
     <div className="space-y-8">
       {/* Welcome Banner */}
@@ -283,6 +287,75 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <span>Open Problem Resolution Hub</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
           </button>
+        </div>
+      </div>
+
+      <div className="support-shell">
+        <div className="support-panel">
+          <div className="support-hero">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-indigo-100">
+              <BellRing className="w-3.5 h-3.5" />
+              Support Center
+            </div>
+
+            <h3 className="mt-4 text-2xl font-black tracking-tight">Queries & Help Desk</h3>
+            <p className="mt-2 text-sm text-indigo-100/90 leading-6">
+              Centralized academic support area for attendance disputes, timetable guidance, and faculty escalations.
+            </p>
+
+            <div className="support-stat-grid">
+              <div className="support-stat">
+                <span className="text-[10px] uppercase tracking-[0.2em] text-indigo-100">Pending</span>
+                <strong>{summary.today_absent + 2}</strong>
+              </div>
+              <div className="support-stat">
+                <span className="text-[10px] uppercase tracking-[0.2em] text-indigo-100">Resolved</span>
+                <strong>{summary.total_students > 0 ? Math.max(6, Math.round(summary.total_students / 8)) : 6}</strong>
+              </div>
+            </div>
+
+            <button
+              onClick={() => onNavigateTab('queries')}
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-white px-3.5 py-2 text-xs font-bold text-slate-900 transition hover:bg-indigo-50"
+            >
+              <MessageSquareText className="w-4 h-4" />
+              Open Query Board
+            </button>
+          </div>
+
+          <div className="support-list">
+            {recentQueries.length > 0 ? (
+              recentQueries.map((query) => (
+                <div key={query.query_id} className="support-card">
+                  <div>
+                    <h4>{query.title}</h4>
+                    <p>{query.description}</p>
+                    <div className="support-meta">
+                      <span>{query.sender_name}</span>
+                      <span>•</span>
+                      <span>{query.subject_code}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-end gap-2">
+                    <span className={`support-tag ${query.priority === 'Urgent' ? 'urgent' : query.priority === 'High' ? 'medium' : query.status === 'Resolved' ? 'resolved' : 'medium'}`}>
+                      {query.priority}
+                    </span>
+                    <span className={`support-tag ${query.status === 'Resolved' ? 'resolved' : query.status === 'Pending' ? 'urgent' : 'medium'}`}>
+                      {query.status}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="support-card">
+                <div>
+                  <h4>No active help queries</h4>
+                  <p>New support requests will appear here once students or faculty submit them.</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

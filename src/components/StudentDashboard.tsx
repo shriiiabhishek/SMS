@@ -3,7 +3,7 @@ import { Chart, registerables } from 'chart.js';
 import { 
   GraduationCap, CheckCircle2, AlertTriangle, XCircle, 
   BookOpen, Calendar, Clock, ShieldCheck, FileText, ArrowRight,
-  PieChart as PieIcon, ChevronRight, HelpCircle, MessageSquare, PlusCircle
+  TrendingUp, ChevronRight, HelpCircle, MessageSquare, PlusCircle
 } from 'lucide-react';
 import { SessionUser, Student } from '../types';
 import { DBService } from '../services/storage';
@@ -23,9 +23,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   navigate,
 }) => {
   // Chart refs and state
-  const pieChartRef = useRef<HTMLCanvasElement | null>(null);
+  const trendChartRef = useRef<HTMLCanvasElement | null>(null);
   const chartInstance = useRef<Chart | null>(null);
-  const [chartMode, setChartMode] = useState<'overall' | 'subjects'>('overall');
 
   // Identify student record
   const effectiveStudentId = studentId || session.student_id || 1;
@@ -49,103 +48,73 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
   const { student, total_classes, present_classes, absent_classes, overall_percentage, status_category, subject_breakdown, recent_records } = attendanceData;
 
-  // Initialize or update Pie Chart
+  // Initialize or update student performance trend graph
   useEffect(() => {
-    if (!pieChartRef.current) return;
+    if (!trendChartRef.current) return;
 
     if (chartInstance.current) {
       chartInstance.current.destroy();
     }
 
-    if (chartMode === 'overall') {
-      chartInstance.current = new Chart(pieChartRef.current, {
-        type: 'doughnut',
-        data: {
-          labels: ['Present Classes', 'Absent Classes'],
-          datasets: [
-            {
-              data: [present_classes, absent_classes],
-              backgroundColor: ['#10b981', '#f43f5e'],
-              borderColor: ['#059669', '#e11d48'],
-              borderWidth: 2,
-              hoverOffset: 6,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                font: { family: 'Plus Jakarta Sans', size: 12, weight: 'bold' },
-                padding: 14,
-              },
-            },
-            tooltip: {
-              callbacks: {
-                label: (context) => {
-                  const total = present_classes + absent_classes;
-                  const value = Number(context.raw) || 0;
-                  const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
-                  return ` ${context.label}: ${value} classes (${pct}%)`;
-                },
-              },
-            },
-          },
-          cutout: '62%',
-        },
-      });
-    } else {
-      // Subject-wise attended classes breakdown
-      const labels = subject_breakdown.map(s => s.subject_code);
-      const data = subject_breakdown.map(s => s.present);
-      const colors = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
+    const labels = recent_records.length > 0
+      ? recent_records.slice().reverse().map((record, index) => `W${index + 1}`)
+      : ['No Data'];
+    const values = recent_records.length > 0
+      ? recent_records.slice().reverse().map(record => {
+          const total = record.present + record.absent;
+          return total > 0 ? Number(((record.present / total) * 100).toFixed(1)) : 0;
+        })
+      : [0];
 
-      chartInstance.current = new Chart(pieChartRef.current, {
-        type: 'pie',
-        data: {
-          labels: labels.length > 0 ? labels : ['No Subjects'],
-          datasets: [
-            {
-              data: data.length > 0 ? data : [1],
-              backgroundColor: colors.slice(0, Math.max(labels.length, 1)),
-              borderWidth: 2,
-              hoverOffset: 6,
-            },
-          ],
+    chartInstance.current = new Chart(trendChartRef.current, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Attendance Trend',
+            data: values,
+            borderColor: '#4f46e5',
+            backgroundColor: 'rgba(79, 70, 229, 0.12)',
+            fill: true,
+            borderWidth: 3,
+            pointRadius: 4,
+            pointBackgroundColor: '#312e81',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            tension: 0.38,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            min: 0,
+            max: 100,
+            ticks: { callback: value => `${value}%` },
+            grid: { color: '#eef2ff' },
+          },
+          x: { grid: { display: false } },
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                font: { family: 'Plus Jakarta Sans', size: 11, weight: 'bold' },
-                padding: 12,
-              },
-            },
-            tooltip: {
-              callbacks: {
-                label: (context) => {
-                  const value = Number(context.raw) || 0;
-                  return ` ${context.label}: ${value} Present Lectures`;
-                },
-              },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => `Attendance: ${context.parsed.y}%`,
             },
           },
         },
-      });
-    }
+      },
+    });
 
     return () => {
       if (chartInstance.current) {
         chartInstance.current.destroy();
       }
     };
-  }, [chartMode, present_classes, absent_classes, subject_breakdown]);
+  }, [recent_records]);
 
   const getStatusBadge = (category: 'Good' | 'Warning' | 'Critical', pct: number) => {
     switch (category) {
@@ -246,56 +215,30 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         </div>
       </div>
 
-      {/* NEW: Student Attendance Distribution Pie Chart Card */}
       <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-2xs space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-bold mb-1">
-              <PieIcon className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Student Attendance Visual Analytics</span>
+              <TrendingUp className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Academic Performance Pulse</span>
             </div>
             <h3 className="text-base font-bold text-slate-900">
-              Personal Attendance Distribution (Pie Chart)
+              Attendance Momentum Over Recent Weeks
             </h3>
             <p className="text-xs text-slate-500">
-              Interactive visual breakdown of physical presence vs absences across all enrolled lectures
+              A cleaner performance trend to track your consistency without pie-chart clutter.
             </p>
-          </div>
-
-          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
-            <button
-              onClick={() => setChartMode('overall')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                chartMode === 'overall'
-                  ? 'bg-white text-indigo-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Present vs Absent
-            </button>
-            <button
-              onClick={() => setChartMode('subjects')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                chartMode === 'subjects'
-                  ? 'bg-white text-indigo-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Subject Share
-            </button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-          {/* Chart Canvas */}
           <div className="lg:col-span-7 h-64 sm:h-72 relative flex items-center justify-center">
-            <canvas ref={pieChartRef} />
+            <canvas ref={trendChartRef} />
           </div>
 
-          {/* Detailed Statistics Side Panel */}
           <div className="lg:col-span-5 space-y-3 bg-slate-50/80 p-5 rounded-2xl border border-slate-200/80 text-xs">
             <h4 className="font-bold text-slate-900 text-sm flex items-center justify-between">
-              <span>Attendance Ratio Summary</span>
+              <span>Current Standing</span>
               <span className="font-mono text-indigo-700">{overall_percentage}%</span>
             </h4>
 
@@ -327,10 +270,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                 </span>
               </div>
             </div>
-
-            <p className="text-[11px] text-slate-500 pt-1 leading-relaxed">
-              💡 <em>Tip: Switch to "Subject Share" above to see your attended lecture distribution across different courses.</em>
-            </p>
           </div>
         </div>
       </div>
